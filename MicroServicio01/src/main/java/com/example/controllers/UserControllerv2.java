@@ -3,85 +3,67 @@ package com.example.controllers;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.swing.text.html.parser.Entity;
-/*prueba 1 de commit 3 */
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.assemblers.UserModelAssembler;
+import com.example.assemblers.UserModelAssembler;
 import com.example.models.entities.User;
 import com.example.models.requests.UserCreate;
 import com.example.models.requests.UserUpdate;
 import com.example.services.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
-
-
 @RestController
-@RequestMapping("/usuario")
+@RequestMapping("/usuario/v2")
+@Tag(name = "Usuarios v2", description = "Controlador versión 2 con Swagger y HATEOAS")
 public class UserControllerv2 {
-    
-    @Autowired
-    private UserModelAssembler assembler;
 
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserModelAssembler assembler;
 
-    @GetMapping("/")
-    @Operation(summary = "Obtener todos los usuarios",
-    description = "Obtiene una lista de todos los usuarios registrados en el sistema")
-    public List<User> obtenerTodos() {
+    @GetMapping
+    @Operation(summary = "Listar todos los usuarios", description = "Devuelve todos los usuarios con enlaces HATEOAS")
+    public CollectionModel<EntityModel<User>> obtenerTodos() {
         List<EntityModel<User>> usuarios = userService.obtenerTodos()
-            .stream()
-            .map(assembler::toModel)
-            .collect(Collectors.toList());
-        return userService.obtenerTodos();
+                .stream()
+                .map(assembler::toModel)
+                .collect(Collectors.toList());
+
+        return CollectionModel.of(usuarios);
     }
 
-     @GetMapping("/{id}")
-     @Operation(summary = "Obtener un usuario por ID",
-    description = "Obtiene un usuario específico por su ID")
-    public User obtenerUno(@PathVariable int id) {
-        return userService.obtenerPorId(id);
+    @GetMapping("/{id}")
+    @Operation(summary = "Obtener usuario por ID", description = "Devuelve un usuario específico por su ID con HATEOAS")
+    public EntityModel<User> obtenerPorId(@PathVariable int id) {
+        User usuario = userService.obtenerPorId(id);
+        return assembler.toModel(usuario);
     }
 
     @PostMapping
-    @Operation(summary = "Registrar un nuevo usuario",
-    description = "Registra un nuevo usuario en el sistema")
-    public User registrar(@Valid @RequestBody UserCreate body) {
-        return userService.registrar(body);
+    @Operation(summary = "Registrar un nuevo usuario", description = "Registra un usuario y devuelve el recurso con HATEOAS")
+    public EntityModel<User> registrar(@Valid @RequestBody UserCreate body) {
+        User nuevo = userService.registrar(body);
+        return assembler.toModel(nuevo);
     }
 
-    @PutMapping("/")
-    @Operation(summary = "Modificar un usuario",
-    description = "Modifica un usuario existente en el sistema")
-    public User modificar(@Valid @RequestBody UserUpdate body){
-        return userService.actualizar(body);
-    }
-    @Operation(summary = "Actualizar un usuario",
-    description = "Actualiza un usuario existente en el sistema")
-      @PutMapping()
-    public User actualizar(@Valid @RequestBody UserUpdate body) {
-        return userService.actualizar(body);
+    @PutMapping
+    @Operation(summary = "Actualizar usuario", description = "Actualiza un usuario y devuelve el recurso actualizado con HATEOAS")
+    public EntityModel<User> actualizar(@Valid @RequestBody UserUpdate body) {
+        User actualizado = userService.actualizar(body);
+        return assembler.toModel(actualizado);
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar un usuario",
-    description = "Elimina un usuario del sistema por su ID")
-    public String eliminar(@PathVariable int id) {
+    @Operation(summary = "Eliminar usuario", description = "Elimina un usuario por ID")
+    public void eliminar(@PathVariable int id) {
         userService.eliminar(id);
-        return "ok";
     }
 }
-

@@ -8,18 +8,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.example.models.entities.Permiso;
 
 public interface PermisoRepository extends JpaRepository<Permiso, Long> {
-    //busca rol por nombre
+    
+    // Buscar permiso por nombre exacto
     Optional<Permiso> findByNombre(String nombre);
     
-    //busca rol que contenga una palabra del nombre
-    List<Permiso> findByNombreContainingIgnoreCaseList(String nombre);
+    // Buscar permisos que contengan una palabra en el nombre (ignora mayúsculas/minúsculas)
+    List<Permiso> findByNombreContainingIgnoreCase(String nombre);
 
-    //busca rol por nombre y ordena por nombre ascendente
+    // Listar todos los permisos ordenados por nombre ascendente
     List<Permiso> findAllByOrderByNombreAsc();
     
-    //verifica si existe un permiso por nombres
+    // Verificar si existe un permiso por nombre
     boolean existsByNombre(String nombre);
-
-    
-    
 }

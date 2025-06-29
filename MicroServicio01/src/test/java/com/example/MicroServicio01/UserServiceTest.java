@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Optional;
 
 import com.example.models.entities.User;
@@ -21,7 +20,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.web.server.ResponseStatusException;
 
-public class AppiUsuarioApplicationTest {
+public class UserServiceTest {
+
     @Mock
     private UserRepository userRepository;
 
@@ -59,8 +59,7 @@ public class AppiUsuarioApplicationTest {
     public void testObtenerPorId_NoExistente() {
         when(userRepository.findById(1)).thenReturn(Optional.empty());
 
-        User result = userService.obtenerPorId(1);
-        assertNull(result);
+        assertThrows(ResponseStatusException.class, () -> userService.obtenerPorId(1));
     }
 
     @Test
@@ -74,11 +73,24 @@ public class AppiUsuarioApplicationTest {
         User usuarioGuardado = new User();
         usuarioGuardado.setId(1);
 
+        when(userRepository.existsByEmail(userCreate.getEmail())).thenReturn(false);
         when(userRepository.save(any(User.class))).thenReturn(usuarioGuardado);
 
         User result = userService.registrar(userCreate);
         assertNotNull(result);
         assertEquals(1, result.getId());
+    }
+
+    @Test
+    public void testRegistrar_EmailDuplicado() {
+        UserCreate userCreate = new UserCreate();
+        userCreate.setNombre("Test");
+        userCreate.setEmail("duplicado@example.com");
+        userCreate.setPassword("123456");
+
+        when(userRepository.existsByEmail(userCreate.getEmail())).thenReturn(true);
+
+        assertThrows(ResponseStatusException.class, () -> userService.registrar(userCreate));
     }
 
     @Test
@@ -109,9 +121,7 @@ public class AppiUsuarioApplicationTest {
 
         when(userRepository.findById(1)).thenReturn(Optional.empty());
 
-        assertThrows(ResponseStatusException.class, () -> {
-            userService.actualizar(update);
-        });
+        assertThrows(ResponseStatusException.class, () -> userService.actualizar(update));
     }
 
     @Test
@@ -129,9 +139,7 @@ public class AppiUsuarioApplicationTest {
     public void testEliminar_UsuarioNoExistente() {
         when(userRepository.findById(1)).thenReturn(Optional.empty());
 
-        assertThrows(ResponseStatusException.class, () -> {
-            userService.eliminar(1);
-        });
+        assertThrows(ResponseStatusException.class, () -> userService.eliminar(1));
     }
 
     @Test
@@ -143,5 +151,4 @@ public class AppiUsuarioApplicationTest {
         assertNotEquals(passwordPlano, hashed);
         assertTrue(hashed.startsWith("$2a$")); // Formato típico de BCrypt
     }
-    
 }
