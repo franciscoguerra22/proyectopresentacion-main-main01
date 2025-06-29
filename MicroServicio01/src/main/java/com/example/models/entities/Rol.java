@@ -7,8 +7,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "roles")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -17,12 +16,12 @@ public class Rol {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_rol")
-    private long id;
+    private Long id;
 
-    @Column(name = "nombre_rol", nullable = false, length = 100)
+    @Column(name = "nombre_rol", nullable = false, length = 100, unique = true)
     private String nombre;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "rel_rol_permiso",
         joinColumns = @JoinColumn(name = "id_rol"),
